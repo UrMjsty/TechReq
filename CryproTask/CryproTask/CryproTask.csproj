@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Binance.Net" Version="9.6.0" />
+      <PackageReference Include="Binance.Spot" Version="4.0.1" />
+      <PackageReference Include="BinanceDotNet" Version="4.12.0" />
+      <PackageReference Include="BinanceFutures.NetCore" Version="1.0.3" />
+      <PackageReference Include="Helmy.Binance.Net" Version="8.0.9" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-preview.1.24080.9" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0-preview.1.24080.9" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0-preview.1.24080.9" />
+      <PackageReference Include="VnBinance.Net" Version="6.13.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="test.cs" />
+    </ItemGroup>
+
+</Project>
