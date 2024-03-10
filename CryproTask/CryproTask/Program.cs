@@ -3,61 +3,43 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Threading; 
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace CryptoTask
 {
-    struct TradeData
-    {
-        [JsonProperty("e")]
-        public string Event { get; set; }
-        [JsonProperty("E")]
-        public long EventTime { get; set; }
-        [JsonProperty("s")]
-        public string Symbol { get; set; }
-        [JsonProperty("t")]
-        public string TradeID { get; set; }
-        [JsonProperty("p")]
-        public string Price { get; set; }
-        [JsonProperty("q")]
-        public string Quantity { get; set; }
-        [JsonProperty("b")]
-        public long BuyerOrderID { get; set; }
-        [JsonProperty("a")]
-        public long SellerOrderID { get; set; }
-        [JsonProperty("T")]
-        public long TradeTime { get; set; }
-        [JsonProperty("m")]
-        public bool IsBuyerMaker { get; set; }
-        [JsonProperty("M")]
-        public bool IsBestMatch { get; set; }
-    }
+    // Structure representing trade data received from the WebSocket
 
     class Program
     {
-        private static readonly object lockObject = new object();
-        private static Dictionary<string, List<TradeData>> tradesDataset = new Dictionary<string, List<TradeData>>();
-        private static int numberOfTradesToKeep;
+        private static readonly object _lockObject = new object();
+        private static Dictionary<string, List<TradeData>> _tradesDataset = new Dictionary<string, List<TradeData>>();
+        private static int _numberOfTradesToKeep;
         
-        private static string tradeId = "N/A";
-        private static string tradeSymbol = "N/A";
-        private static string price = "N/A";
-        private static string quantity = "N/A";
+        // Variables to store trade information for display
 
-        private static bool isSell;
-        private static string side = "";
+        private static string _tradeData = "";
+        private static string _tradeId = "N/A";
+        private static string _tradeSymbol = "N/A";
+        private static string _price = "N/A";
+        private static string _quantity = "N/A";
+        
+        // Variables for trade side (Buy/Sell) and console color
 
-        private static ConsoleColor _consoleColor  = ConsoleColor.White;
+        private static bool _isSell;
+        private static string _side = "";
+        private static byte[] _buffer = new byte[1024];
+        private static ConsoleColor _consoleColor = ConsoleColor.White;
+        private static StringBuilder _sb = new StringBuilder();
+
         static void Main()
         {
             Console.Write("Enter the number of trades to keep for each trading pair: ");
-            if (int.TryParse(Console.ReadLine(), out numberOfTradesToKeep) && numberOfTradesToKeep > 0)
+            if (int.TryParse(Console.ReadLine(), out _numberOfTradesToKeep) && _numberOfTradesToKeep > 0)
             {
-                List<string> tradingPairs = new List<string>
-                {
-                    "btcusdt", "ethusdt", "bnbusdt" // Add your trading pairs of interest
-                };
+                string? inputString = Console.ReadLine();
+                List<string> tradingPairs = ParseInput(inputString);
+            //    List<string> tradingPairs = new List<string> { "btcusdt", "ethusdt", "bnbusdt", "USDTUSDC".ToLower(), "DOGESHIB".ToLower() // Add your trading pairs of interest};
 
                 Thread clearOldValuesThread = new Thread(ClearOldValues);
                 clearOldValuesThread.Start();
@@ -92,12 +74,12 @@ namespace CryptoTask
                     try
                     {
                         byte[] buffer = new byte[1024];
-                        WebSocketReceiveResult result = socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None).Result;
+                        WebSocketReceiveResult result = socket.ReceiveAsync(new ArraySegment<byte>(_buffer), CancellationToken.None).Result;
 
                         if (result.MessageType == WebSocketMessageType.Text)
                         {
-                            string tradeData = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                            HandleTradeUpdate(tradingPair, tradeData);
+                            _tradeData = Encoding.UTF8.GetString(_buffer, 0, result.Count);
+                            HandleTradeUpdate(tradingPair, _tradeData);
                         }
                     }
                     catch (Exception ex)
@@ -110,20 +92,20 @@ namespace CryptoTask
 
         static void HandleTradeUpdate(string tradingPair, string tradeData)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                if (!tradesDataset.TryGetValue(tradingPair, out var tradeList))
+                if (!_tradesDataset.TryGetValue(tradingPair, out var tradeList))
                 {
                     tradeList = new List<TradeData>();
-                    tradesDataset[tradingPair] = tradeList;
+                    _tradesDataset[tradingPair] = tradeList;
                 }
 
                 TradeData tradeObject = JsonConvert.DeserializeObject<TradeData>(tradeData);
                 tradeList.Add(tradeObject);
 
-                if (tradeList.Count > numberOfTradesToKeep)
+                if (tradeList.Count > _numberOfTradesToKeep)
                 {
-                    tradeList.RemoveRange(0, tradeList.Count - numberOfTradesToKeep);
+                    tradeList.RemoveRange(0, tradeList.Count - _numberOfTradesToKeep);
                 }
             }
         }
@@ -133,14 +115,14 @@ namespace CryptoTask
             while (true)
             {
                 Thread.Sleep(TimeSpan.FromMinutes(1));
-                
-                lock (lockObject)
+
+                lock (_lockObject)
                 {
-                    foreach (var pair in tradesDataset)
+                    foreach (var pair in _tradesDataset)
                     {
-                        if (pair.Value.Count > numberOfTradesToKeep)
+                        if (pair.Value.Count > _numberOfTradesToKeep)
                         {
-                            pair.Value.RemoveRange(0, pair.Value.Count - numberOfTradesToKeep);
+                            pair.Value.RemoveRange(0, pair.Value.Count - _numberOfTradesToKeep);
                         }
                     }
                 }
@@ -153,31 +135,44 @@ namespace CryptoTask
             {
                 Thread.Sleep(200);
 
-                lock (lockObject)
+                lock (_lockObject)
                 {
                     Console.Clear();
+                    GC.Collect();
                     Console.WriteLine("Trades:");
-                    foreach (var pair in tradesDataset)
+                    foreach (var pair in _tradesDataset)
                     {
                         foreach (var tradeData in pair.Value)
                         {
-                             tradeId = tradeData.TradeID ?? "N/A";
-                             tradeSymbol = tradeData.Symbol ?? "N/A";
-                             price = tradeData.Price ?? "N/A";
-                             quantity = tradeData.Quantity ?? "N/A";
+                            _tradeId = tradeData.TradeID ?? "N/A";
+                            _tradeSymbol = tradeData.Symbol ?? "N/A";
+                            _price = tradeData.Price ?? "N/A";
+                            _quantity = tradeData.Quantity ?? "N/A";
 
-                             isSell = tradeData.IsBuyerMaker;
-                             side = isSell ? "Sell" : "Buy";
+                            _isSell = tradeData.IsBuyerMaker;
+                            _side = _isSell ? "Sell" : "Buy";
 
-                             _consoleColor  = isSell ? ConsoleColor.Red : ConsoleColor.Green;
+                            _consoleColor = _isSell ? ConsoleColor.Red : ConsoleColor.Green;
                             Console.ForegroundColor = _consoleColor;
-
-                            Console.WriteLine(
-                                $"| {tradeSymbol,-10} | {tradeId,-20} | {price,-15} | {quantity,-15} | {side,-10} |");
+                            _sb.Clear();
+                            _sb.Append(($"| {_tradeSymbol,-10} | {_tradeId,-10} | {_price,-15} | {_quantity,-15} | {_side,-5} |"));
+                            Console.WriteLine(_sb);
                         }
                     }
                 }
             }
+        }
+        static List<string> ParseInput(string? input)
+        {
+            List<string> resultList = new List<string>();
+
+            // Split the input based on spaces or commas
+            string[] splitValues = input.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Add the split values to the result list
+            resultList.AddRange(splitValues);
+
+            return resultList;
         }
     }
 }
