@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CryproTask")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c3954398facf533256e45e15fcf23aa17a76b8c")]
 [assembly: System.Reflection.AssemblyProductAttribute("CryproTask")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CryproTask")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

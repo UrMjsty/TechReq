@@ -34,12 +34,13 @@ namespace CryptoTask
 
         static void Main()
         {
+            Console.Write("Enter trading pairs: ");
+            string? inputString = Console.ReadLine();
+            List<string> tradingPairs = ParseInput(inputString);
             Console.Write("Enter the number of trades to keep for each trading pair: ");
             if (int.TryParse(Console.ReadLine(), out _numberOfTradesToKeep) && _numberOfTradesToKeep > 0)
             {
-                string? inputString = Console.ReadLine();
-                List<string> tradingPairs = ParseInput(inputString);
-            //    List<string> tradingPairs = new List<string> { "btcusdt", "ethusdt", "bnbusdt", "USDTUSDC".ToLower(), "DOGESHIB".ToLower() // Add your trading pairs of interest};
+                //    List<string> tradingPairs = new List<string> { "btcusdt", "ethusdt", "bnbusdt", "USDTUSDC".ToLower(), "DOGESHIB".ToLower() // Add your trading pairs of interest};
 
                 Thread clearOldValuesThread = new Thread(ClearOldValues);
                 clearOldValuesThread.Start();
@@ -164,6 +165,8 @@ namespace CryptoTask
         }
         static List<string> ParseInput(string? input)
         {
+            input = input?.Replace("/", "");
+            input = input?.Replace("\\", "");
             List<string> resultList = new List<string>();
 
             // Split the input based on spaces or commas

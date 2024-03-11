@@ -70,6 +70,10 @@
               "target": "Package",
               "version": "[9.0.0-preview.1.24080.9, )"
             },
+            "System.Net.NameResolution": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            },
             "VnBinance.Net": {
               "target": "Package",
               "version": "[6.13.2, )"
@@ -86,12 +90,27 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.linux-x64",
+              "version": "[6.0.24, 6.0.24]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.linux-x64",
+              "version": "[6.0.24, 6.0.24]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
           "runtimeIdentifierGraphPath": "/home/urmjsty/.dotnet/sdk/6.0.416/RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "ubuntu.22.04-x64": {
+          "#import": []
         }
       }
     }
